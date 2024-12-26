@@ -188,3 +188,4 @@ public class BuckshotCounter {
         SwingUtilities.invokeLater(BuckshotCounter::new);
     }
 }
+
