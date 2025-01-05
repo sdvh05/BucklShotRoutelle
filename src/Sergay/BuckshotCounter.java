@@ -20,33 +20,30 @@ public class BuckshotCounter {
     private JPanel leftPanel, rightPanel;
     private JPanel mainPanel;
     private Stack<JButton> undoStack;
-    private Stack<JPanel> panelStack;
 
     public BuckshotCounter() {
-        // Inicializar pilas para undo
-        undoStack = new Stack<>();
-        panelStack = new Stack<>();
-
         // Configuración inicial del marco
         frame = new JFrame("Buckshot Roulette");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 600);
+        frame.setSize(300, 400); // Tamaño reducido
         frame.setLayout(new BorderLayout());
+
+        undoStack = new Stack<>();
 
         // Crear los paneles principales
         leftPanel = new JPanel();
         rightPanel = new JPanel();
-        mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel = new JPanel(new BorderLayout());
 
         // Estilizar los paneles
         leftPanel.setBackground(Color.BLACK);
         rightPanel.setBackground(Color.BLACK);
-        leftPanel.setLayout(new GridLayout(0, 1, 5, 5));
-        rightPanel.setLayout(new GridLayout(0, 1, 5, 5));
+        leftPanel.setLayout(new GridLayout(0, 1, 2, 2));
+        rightPanel.setLayout(new GridLayout(0, 1, 2, 2));
 
-        // Hacer los paneles más anchos
-        leftPanel.setPreferredSize(new Dimension(300, frame.getHeight()));
-        rightPanel.setPreferredSize(new Dimension(300, frame.getHeight()));
+        // Ajustar tamaños
+        leftPanel.setPreferredSize(new Dimension(100, 0));
+        rightPanel.setPreferredSize(new Dimension(100, 0));
 
         // Agregar paneles al frame
         mainPanel.add(leftPanel, BorderLayout.WEST);
@@ -66,8 +63,8 @@ public class BuckshotCounter {
             }
         });
 
-        // Crear el botón de Error (Undo)
-        JButton undoButton = new JButton("Error");
+        // Crear el botón de deshacer
+        JButton undoButton = new JButton("Deshacer");
         undoButton.setBackground(Color.DARK_GRAY);
         undoButton.setForeground(Color.WHITE);
         undoButton.setFocusPainted(false);
@@ -78,13 +75,14 @@ public class BuckshotCounter {
             }
         });
 
-        // Panel para botones de control
-        JPanel controlPanel = new JPanel();
-        controlPanel.setBackground(Color.BLACK);
-        controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        controlPanel.add(resetButton);
-        controlPanel.add(undoButton);
-        frame.add(controlPanel, BorderLayout.SOUTH);
+        // Panel inferior para los botones
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new GridLayout(1, 2));
+        bottomPanel.setBackground(Color.BLACK);
+        bottomPanel.add(resetButton);
+        bottomPanel.add(undoButton);
+
+        frame.add(bottomPanel, BorderLayout.SOUTH);
         frame.getContentPane().setBackground(Color.BLACK);
 
         reiniciar();
@@ -97,19 +95,17 @@ public class BuckshotCounter {
         int azul = obtenerNumeroBalas("azules");
         int rojo = obtenerNumeroBalas("rojas");
 
-        // Limpiar los paneles y pilas
+        // Limpiar los paneles y la pila de deshacer
         leftPanel.removeAll();
         rightPanel.removeAll();
         undoStack.clear();
-        panelStack.clear();
 
         // Generar los botones azules
         for (int i = 0; i < azul; i++) {
-            JButton blueButton = new JButton("Azul " + (i + 1));
+            JButton blueButton = new JButton();
             blueButton.setBackground(Color.BLUE);
-            blueButton.setForeground(Color.WHITE);
             blueButton.setFocusPainted(false);
-            blueButton.setPreferredSize(new Dimension(250, 40));
+            blueButton.setPreferredSize(new Dimension(80, 30));
             blueButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -117,7 +113,6 @@ public class BuckshotCounter {
                     leftPanel.revalidate();
                     leftPanel.repaint();
                     undoStack.push(blueButton);
-                    panelStack.push(leftPanel);
                 }
             });
             leftPanel.add(blueButton);
@@ -125,11 +120,10 @@ public class BuckshotCounter {
 
         // Generar los botones rojos
         for (int i = 0; i < rojo; i++) {
-            JButton redButton = new JButton("Rojo " + (i + 1));
+            JButton redButton = new JButton();
             redButton.setBackground(Color.RED);
-            redButton.setForeground(Color.WHITE);
             redButton.setFocusPainted(false);
-            redButton.setPreferredSize(new Dimension(250, 40));
+            redButton.setPreferredSize(new Dimension(80, 30));
             redButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -137,7 +131,6 @@ public class BuckshotCounter {
                     rightPanel.revalidate();
                     rightPanel.repaint();
                     undoStack.push(redButton);
-                    panelStack.push(rightPanel);
                 }
             });
             rightPanel.add(redButton);
@@ -151,14 +144,19 @@ public class BuckshotCounter {
     }
 
     private void deshacer() {
-        if (!undoStack.isEmpty() && !panelStack.isEmpty()) {
+        if (!undoStack.isEmpty()) {
             JButton lastButton = undoStack.pop();
-            JPanel lastPanel = panelStack.pop();
-            lastPanel.add(lastButton);
-            lastPanel.revalidate();
-            lastPanel.repaint();
+            if (lastButton.getBackground() == Color.BLUE) {
+                leftPanel.add(lastButton);
+                leftPanel.revalidate();
+                leftPanel.repaint();
+            } else if (lastButton.getBackground() == Color.RED) {
+                rightPanel.add(lastButton);
+                rightPanel.revalidate();
+                rightPanel.repaint();
+            }
         } else {
-            JOptionPane.showMessageDialog(frame, "Ya Wey", "Error", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "No hay acciones para deshacer.", "Deshacer", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
